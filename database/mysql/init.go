@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	driverPostgres "gorm.io/driver/postgres"
+	driverMysql "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
@@ -73,7 +73,7 @@ func connect(param *mysql) (*gorm.DB, error) {
 		cfg.NamingStrategy = param.namingStrategy
 	}
 
-	db, err := gorm.Open(driverPostgres.Open(dsn), cfg)
+	db, err := gorm.Open(driverMysql.Open(dsn), cfg)
 
 	if err != nil {
 		return nil, err
