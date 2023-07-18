@@ -1,0 +1,4 @@
+version: 1
+lang: go
+name: auth-svc
+category: services
