@@ -4,7 +4,7 @@ application:
   mode: dev #dev|prod
   maintenance: false #true|false
   cors:
-    allowedHost: localhost, https://labstack.com, https://labstack.net
+    allowedHost: localhost, https://gin-gonic.com
 
 services:
   auth-service:
@@ -19,20 +19,27 @@ db:
   password:
   host: localhost
   port: 3306
-  database: test_ent
+  database: test_db
   maxIdleConn: 10
   maxOpenConn: 100
+  logMode: 3
+  logLevel: 3
+  logEnabled: true #true|false
+  logThreeshold: 3 #0-3
 
 outbound:
   quotes:
     get-url: https://programming-quotesapi.vercel.app/api/random
     post-url: https://en8trqq30hty3.x.pipedream.net/
 
+auth:
+  secret-key:
+
 smtp:
-  username:
-  password:
-  ttl:
-  type:
+  username: smtp@relay.com
+  password: p4ssw0rd!
+  ttl: 5m
+  type: smtp
 
 cache:
   configs:
