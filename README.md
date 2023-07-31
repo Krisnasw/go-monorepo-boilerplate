@@ -106,8 +106,13 @@ Step-by-step writing code using this pattern
 # Future Example
 
 [] gRPC Implementation
+
 [] Rest API service with background worker
+
 [] Rest API service with external dependency
+
 [] Rest API service with event driven system (pubsub)
+
 [] Add Health Check
+
 [] Implement Kubernetes
