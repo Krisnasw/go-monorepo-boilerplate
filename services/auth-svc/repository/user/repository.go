@@ -23,7 +23,7 @@ func New(db *gorm.DB, table string) repository.IUserRepository {
 func (r *Repository) GetByEmail(email string) (*entity.User, error) {
 	userData := &User{}
 
-	err := r.db.Raw(`SELECT * FROM drivers
+	err := r.db.Raw(`SELECT * FROM users
 		WHERE email = ?
 	`, email).First(&userData).Error
 

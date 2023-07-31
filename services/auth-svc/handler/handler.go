@@ -4,8 +4,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
+	"go-monorepo-boilerplate/exceptions"
 	"go-monorepo-boilerplate/helpers"
+	"go-monorepo-boilerplate/middleware"
 	"go-monorepo-boilerplate/services/auth-svc/app/usecase/user"
 	"go-monorepo-boilerplate/services/auth-svc/entity"
 )
@@ -22,7 +25,7 @@ func New(userUseCase user.IUseCase) IRestHandler {
 func (h *RestHandler) Login(c *gin.Context) {
 	var request entity.AuthRequest
 
-	err := c.ShouldBindJSON(&request)
+	err := c.Bind(&request)
 	if err != nil {
 		if len(request.Password) < 8 {
 			c.JSON(http.StatusInternalServerError, helpers.ErrorResponse{
@@ -48,8 +51,29 @@ func (h *RestHandler) Login(c *gin.Context) {
 		})
 		return
 	} else {
+		accessToken, refreshToken, err := middleware.GenerateJwt(result.Id, result.Name, result.Username, result.Email, "")
+		if err != nil {
+			logrus.Errorf("%w: %v", exceptions.InternalServerError, err)
+			c.JSON(http.StatusInternalServerError, helpers.ErrorResponse{
+				Message: err.Error(),
+				Success: false,
+				Error:   err.Error(),
+			})
+			return
+		}
+
 		c.JSON(http.StatusOK, helpers.SuccessResponse{
-			Data:    result,
+			Data: map[string]interface{}{
+				"user": map[string]string{
+					"id":       result.Id,
+					"name":     result.Name,
+					"username": result.Username,
+					"email":    result.Email,
+					"avatar":   "",
+				},
+				"accessToken":  accessToken,
+				"refreshToken": refreshToken,
+			},
 			Message: "Successfully Login",
 			Success: true,
 		})

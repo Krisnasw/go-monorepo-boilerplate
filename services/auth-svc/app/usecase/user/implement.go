@@ -42,7 +42,7 @@ func (uc *IUseCaseImplementation) Login(email, password string) (*entity.User, e
 		return nil, exceptions.PasswordNotMatch
 	}
 
-	return nil, nil
+	return user, nil
 }
 
 // Register implements IUseCase.

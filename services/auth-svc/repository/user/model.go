@@ -11,9 +11,9 @@ import (
 type User struct {
 	Id          string `gorm:"primaryKey"`
 	Name        string
-	Email       string `gorm:"unique"`
-	Username    string `gorm:"unique, omitempty"`
-	Password    string
+	Email       string    `gorm:"unique"`
+	Username    string    `gorm:"unique, omitempty"`
+	Password    string    `gorm:"column:password"`
 	PhoneNumber string    `gorm:"column:phone"`
 	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
@@ -37,6 +37,7 @@ func (user *User) ToEntity() *entity.User {
 		Name:        user.Name,
 		Email:       user.Email,
 		Username:    user.Username,
+		Password:    user.Password,
 		PhoneNumber: user.PhoneNumber,
 		CreatedAt:   user.CreatedAt.Local(),
 		UpdatedAt:   user.UpdatedAt.Local(),
@@ -56,7 +57,7 @@ func (User) FromEntity(user *entity.User) *User {
 }
 
 func (user *User) HashPassword(password string) error {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}

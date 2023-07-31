@@ -10,6 +10,7 @@ import (
 	"github.com/newrelic/go-agent/v3/integrations/nrgin"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm/logger"
@@ -37,7 +38,7 @@ import (
 // @BasePath /api/v1
 // @schemes http
 func main() {
-	cfg := config.New()
+	config.New()
 
 	app, err := newrelic.NewApplication(
 		newrelic.ConfigAppName("go-monorepo"),
@@ -51,10 +52,10 @@ func main() {
 	router.RedirectTrailingSlash = true
 	router.RedirectFixedPath = true
 
-	db, err := postgres.Connect(cfg.DBHost, cfg.DBPort, cfg.DBUserName, cfg.DBPassword, cfg.DBDatabaseName,
-		postgres.SetPrintLog(cfg.DBLogEnable, logger.LogLevel(cfg.DBLogLevel), time.Duration(cfg.DBLogThreshold)*time.Millisecond))
+	db, err := postgres.Connect(viper.GetString("db.host"), viper.GetInt("db.port"), viper.GetString("db.username"), viper.GetString("db.password"), viper.GetString("db.database"),
+		postgres.SetPrintLog(viper.GetBool("db.logEnabled"), logger.LogLevel(viper.GetInt("db.logLevel")), time.Duration(viper.GetInt("db.logThreshold"))*time.Millisecond))
 	if err != nil {
-		logrus.Panicln("Failed to initialized connection postgres DB:", err)
+		logrus.Errorln("Failed to initialized connection postgres DB:", err)
 	}
 
 	err = sentry.Init(sentry.ClientOptions{
@@ -79,5 +80,5 @@ func main() {
 		api.POST("/login", h.Login)
 	}
 
-	router.Run(fmt.Sprintf(":%d", cfg.ServicePort))
+	router.Run(fmt.Sprintf(":%d", viper.GetInt("services.auth-service.port")))
 }

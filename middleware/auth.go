@@ -8,12 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
-
-	"go-monorepo-boilerplate/services/auth-svc/config"
+	"github.com/spf13/viper"
 )
-
-var cfg = config.New()
-var secretKey = []byte(cfg.JwtSecret)
 
 type Claims struct {
 	Id       string `json:"id"`
@@ -25,7 +21,7 @@ type Claims struct {
 }
 
 // Generate Jwt based on Claims.
-func GenerateJwt(id, name, username, email, avatar string) (string, error) {
+func GenerateJwt(id, name, username, email, avatar string) (string, string, error) {
 	expirationTime := time.Now().Add(720 * time.Hour)
 
 	claims := &Claims{
@@ -39,13 +35,23 @@ func GenerateJwt(id, name, username, email, avatar string) (string, error) {
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(secretKey)
-	if err != nil {
-		return "", err
+	refreshClaims := &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(24))),
+		},
 	}
 
-	return tokenString, nil
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(viper.GetString("auth.secret-key")))
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(viper.GetString("auth.secret-key")))
+	if err != nil {
+		return "", "", err
+	}
+
+	return token, refreshToken, nil
 }
 
 // Verify JWT Token
@@ -54,7 +60,7 @@ func VerifyJwt(signedToken string) (err error) {
 		signedToken,
 		&Claims{},
 		func(token *jwt.Token) (interface{}, error) {
-			return []byte(secretKey), nil
+			return []byte(viper.GetString("auth.secret-key")), nil
 		},
 	)
 
@@ -80,7 +86,7 @@ func VerifyJwt(signedToken string) (err error) {
 func ExtractClaims(tokenStr string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		// check token signing method etc
-		return secretKey, nil
+		return viper.GetString("auth.secret-key"), nil
 	})
 
 	if err != nil {

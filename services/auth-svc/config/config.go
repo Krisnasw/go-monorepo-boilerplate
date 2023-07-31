@@ -1,48 +1,70 @@
 package config
 
 import (
+	"github.com/fsnotify/fsnotify"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-type Config struct {
-	Environment string `mapstructure:"application.mode" default:"dev"`
-	Maintenance bool   `mapstructure:"application.maintenance" default:"false"`
-	ServiceName string `mapstructure:"services.auth-service" default:"auth-svc"`
-	ServicePort int    `mapstructure:"services.auth-service.port" default:"28001"`
+const (
+	fileConfigName = "app.config"
+	fileConfigPath = "../.."
+	fileConfigType = "yml"
+)
 
-	DBHost         string `mapstructure:"db.host" default:"localhost"`
-	DBPort         int    `mapstructure:"db.port" default:"5423"`
-	DBUserName     string `mapstructure:"db.username" default:"postgres"`
-	DBPassword     string `mapstructure:"db.password" default:"test@p4ssw0rd!"`
-	DBDatabaseName string `mapstructure:"db.database" default:"qylo_drivers"`
-	DBLogMode      int    `mapstructure:"db.logMode" default:"3"`
-	DBLogLevel     int    `mapstructure:"db.logLevel" default:"3"`
-	DBLogEnable    bool   `mapstructure:"db.logEnabled" default:"true"`
-	DBLogThreshold int    `mapstructure:"db.logThreshold" default:"1"`
+func New() {
+	viper.AddConfigPath(fileConfigPath)
+	viper.SetConfigType(fileConfigType)
+	viper.SetConfigName(fileConfigName)
 
-	JwtSecret string `mapstructure:"auth.secret-key" default:"secretw45h3re!"`
-
-	RedisHost     string `mapstructure:"cache.configs.redis.host" default:"127.0.0.1"`
-	RedisPort     string `mapstructure:"cache.configs.redis.port" default:"6380"`
-	RedisPassword string `mapstructure:"cache.configs.redis.password" default:"OppoDev12@"`
-}
-
-func New() Config {
-	cfg := Config{}
-
-	viper.SetConfigName("app.config") // name of the config file (without extension)
-	viper.AddConfigPath(".")          // path to look for the config file in
-	viper.SetConfigType("yaml")       // type of the config file
-
+	setDefaultKeys()
 	err := viper.ReadInConfig()
 	if err != nil {
-		return cfg
+		logrus.Fatal(err)
+		panic(err)
 	}
 
-	err = viper.Unmarshal(&cfg)
-	if err != nil {
-		return cfg
-	}
+	logrus.Infof("initialized configs viper: success", fileConfigPath+"/"+fileConfigName+"."+fileConfigType)
 
-	return cfg
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		logrus.Infof("Config file changed:", e.Name)
+	})
+	viper.WatchConfig()
+	logrus.Infof("initialized WatchConfig(): success", fileConfigPath+"/"+fileConfigName+"."+fileConfigType)
+
+	return
+}
+
+func setDefaultKeys() {
+	viper.SetDefault("application.port", 29000)
+	viper.SetDefault("application.mode", "debug")
+
+	host := []string{"localhost", "https://gin-gonic.com"}
+	viper.SetDefault("application.cors.allowedHost", host)
+
+	//viper.SetDefault("db.configs.username", "root")
+	//viper.SetDefault("db.configs.password", "password")
+	viper.SetDefault("db.host", "127.0.0.1")
+	viper.SetDefault("db.port", "3306")
+	viper.SetDefault("db.database", "echo_sample")
+	viper.SetDefault("db.maxIdleConn", 5)
+	viper.SetDefault("db.maxOpenConn", 10)
+	viper.SetDefault("db.logEnabled", true)
+	viper.SetDefault("db.logMode", 3)
+	viper.SetDefault("db.logLevel", 3)
+	viper.SetDefault("db.logThreshold", true)
+
+	// viper.SetDefault("cache.configs.redis.username", "root")
+	// viper.SetDefault("cache.configs.redis.password", "password")
+	viper.SetDefault("cache.configs.redis.db", 0)
+	viper.SetDefault("cache.configs.redis.poolSize", 10)
+
+	viper.SetDefault("cache.configs.redis.host", "127.0.0.1")
+	viper.SetDefault("cache.configs.redis.port", 6379)
+
+	viper.SetDefault("cache.ttl.short-period", "3h")
+	viper.SetDefault("cache.ttl.medium-period", "24h")
+	viper.SetDefault("cache.ttl.long-period", "3d")
+
+	logrus.Infof("initialized default configs value : success", viper.AllSettings())
 }
