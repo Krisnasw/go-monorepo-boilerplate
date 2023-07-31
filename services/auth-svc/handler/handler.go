@@ -11,6 +11,7 @@ import (
 	"go-monorepo-boilerplate/middleware"
 	"go-monorepo-boilerplate/services/auth-svc/app/usecase/user"
 	"go-monorepo-boilerplate/services/auth-svc/entity"
+
 )
 
 type RestHandler struct {
@@ -47,7 +48,7 @@ func (h *RestHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, helpers.ErrorResponse{
 			Message: err.Error(),
 			Success: false,
-			Error:   err.Error(),
+			Data:   err.Error(),
 		})
 		return
 	} else {
@@ -57,7 +58,7 @@ func (h *RestHandler) Login(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, helpers.ErrorResponse{
 				Message: err.Error(),
 				Success: false,
-				Error:   err.Error(),
+				Data:   err.Error(),
 			})
 			return
 		}
